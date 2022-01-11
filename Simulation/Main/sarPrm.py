@@ -60,6 +60,53 @@ def get_parameters():
     }
     return prm
 
+# Funcion que define los parametros del sistema (Ejercicio de Simulacion)
+def get_parameters_sim():
+    # Definición de parámetros
+    c = 0.3 #0.299792458 # Velocidad de la luz (x 1e9 m/s)
+    fc = 15 # Frecuencia Central(GHz)
+    BW = 0.6 # Ancho de banda(GHz)
+    Ls = 0.3 # 4 # 0.6 # Longitud del riel (m)
+    Ro = 0 # Constante debido al delay de los cables(m)
+    theta = 90 # Angulo azimuth de vision de la imagen final(grados sexagesimales E [0-90])
+
+    # Definicion de las dimensiones de la imagen ("dh" y "dw" usados solo en BP)
+    w = 10 # 800 # 5 # Ancho de la imagen(m)
+    h = 10 #10 # 800 # 5 # Altura de la imagen(m)
+    dw = 1.25*0.01 # 0.625 # 1.25 #0.25 # 0.2 #0.1 # Paso en el eje del ancho(m)
+    dh = 1.25*0.01 # 0.625 # 1.25 #0.25 # 0.2 #0.1 # Paso en el eje de la altura(m)
+
+    # Hallando el Np a partir de los pasos
+    dp= c/(4.21*fc*np.sin(theta*np.pi/180)) # paso del riel para un angulo de vision de 180°
+    Np= int(Ls/dp)+1 # Numero de pasos del riel
+
+    if Np%2!=0:
+        Np+=1   # Para que el numero de pasos sea par
+
+    #dp = 0.6
+    #Np=int(Ls/dp)+1
+    #Nf=2**10
+
+    # Hallando el Nf en funcion a la distancia máxima deseada
+    r_r=c/(2*BW) # resolucion en rango
+    Nf=int(h/r_r) +1 #Numero de frecuencias
+
+    prm={
+        'c':c,
+        'fc':fc,
+        'BW':BW,
+        'Ls':Ls,
+        'Ro':Ro,
+        'theta':theta,
+        'Np':Np,
+        'Nf':Nf,
+        'w':w,
+        'h':h,
+        'dw':dw,
+        'dh':dh
+    }
+    return prm
+
 # Funcion que define los parametros del sistema(Datos reales)
 def get_parameters2(dset):
     # Definición y lectura de parámetros
@@ -114,6 +161,11 @@ def get_scalar_data():
 def get_scalar_data2():
     at=np.array([1,1,1]) # Reflectividad
     Rt=np.array([(0,2),(4,8),(-4,8)]) # Coordenadas del target (x,y)m
+    return at,Rt
+
+def get_scalar_data3():
+    at=np.array([1,1,1]) # Reflectividad
+    Rt=np.array([(-2,2),(0,4),(2,6)]) # Coordenadas del target (x,y)m
     return at,Rt
 
 def get_matrix_data1():

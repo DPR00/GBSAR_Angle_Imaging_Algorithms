@@ -25,7 +25,7 @@ import timeit
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 #------------------LECTURA Y DEFINICIÓN DE PARÁMETROS--------------------
-prm = sp.get_parameters()
+prm = sp.get_parameters_sim()
 c,fc,BW,Nf = prm['c'],prm['fc'],prm['BW'],prm['Nf']
 Ls,Np,Ro,theta = prm['Ls'],prm['Np'],prm['Ro'],prm['theta']
 Lx,Ly,dx,dy = prm['w'],prm['h'],prm['dw'],prm['dh'] # Dimensiones de la imagen
@@ -34,7 +34,7 @@ show = False
 def get_SAR_data():
     """ Obtiene el histórico de fase ya sea simulado o real"""
     # Cálculo de parámetros
-    It, Rt = sp.get_matrix_data6() # Magnitud y coordenadas del target respectivamente
+    It, Rt = sp.get_scalar_data3() # Magnitud y coordenadas del target respectivamente
     dp=Ls/(Np-1) # Paso del riel(m)
     df=BW/(Nf-1) # Paso en frecuencia del BW
     fi=fc-BW/2 # Frecuencia inferior(GHz)

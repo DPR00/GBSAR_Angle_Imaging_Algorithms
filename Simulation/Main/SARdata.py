@@ -10,7 +10,7 @@ import sarPrm as sp
 import drawFigures as dF
 
 #------------------LECTURA Y DEFINICIÓN DE PARÁMETROS--------------------
-prm = sp.get_parameters()
+prm = sp.get_parameters_sim()
 c,fc,BW,Nf = prm['c'],prm['fc'],prm['BW'],prm['Nf']
 Ls,Np,Ro,theta = prm['Ls'],prm['Np'],prm['Ro'],prm['theta']
 Lx,Ly,dx,dy = prm['w'],prm['h'],prm['dw'],prm['dh'] # Dimensiones de la imagen

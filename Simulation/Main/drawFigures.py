@@ -377,14 +377,15 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
     cax2 = divider2.append_axes("right", size="5%", pad=0.1) # pad es el espaciado con la grafica principal
     ax[1].grid(ls='--')
     
+
     plt.colorbar(im2,cax=cax2,label='(rad)',extend='both')
     fig.suptitle(title_name)
     if orientation == "H":
         fig.subplots_adjust(left=0.065, right=0.95, wspace=0.3)
         #fig.tight_layout() # cuadra bien las imagenes
         if title_name != None:
-            fig.savefig("/home/diegopalma/Documents/github/roj_sar/GBSAR_Imaging_Algorithms/Simulation/figures/"+"RD1_2)"
-                   +title_name,orientation='landscape')
+            fig.savefig("/home/diegopalma/Documents/github/roj_sar/GBSAR_Angle_Imaging_Algorithms/Simulation/figures/"+"RD1_2)"
+                   +title_name+"_1",orientation='landscape')
     elif orientation == "V":
         #fig.subplots_adjust(left=0.065, right=0.95, hspace=0.1)
         fig.tight_layout() # cuadra bien las imagenes
