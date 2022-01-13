@@ -385,7 +385,7 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
         #fig.tight_layout() # cuadra bien las imagenes
         if title_name != None:
             fig.savefig("/home/diegopalma/Documents/github/roj_sar/GBSAR_Angle_Imaging_Algorithms/Simulation/figures/"+"RD1_2)"
-                   +title_name+"_1",orientation='landscape')
+                   +title_name+"_9",orientation='landscape')
     elif orientation == "V":
         #fig.subplots_adjust(left=0.065, right=0.95, hspace=0.1)
         fig.tight_layout() # cuadra bien las imagenes

@@ -88,5 +88,6 @@ def get_phaseH(prm, I_t, rt): # Parámetros, Vector de intensidades, vector de p
 
 # Distance vector between target and riel_k position in matrix target
 def distance_nk(r_n, x_k): # punto "n", punto del riel "k"
+    x_k = x_k*np.cos(np.pi/3)
     d=((r_n[0]-x_k)**2+(r_n[1])**2)**0.5
     return d

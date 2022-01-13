@@ -25,7 +25,7 @@ import timeit
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 #------------------LECTURA Y DEFINICIÓN DE PARÁMETROS--------------------
-prm = sp.get_parameters_sim()
+prm = sp.get_parameters()
 c,fc,BW,Nf = prm['c'],prm['fc'],prm['BW'],prm['Nf']
 Ls,Np,Ro,theta = prm['Ls'],prm['Np'],prm['Ro'],prm['theta']
 Lx,Ly,dx,dy = prm['w'],prm['h'],prm['dw'],prm['dh'] # Dimensiones de la imagen
@@ -34,7 +34,7 @@ show = False
 def get_SAR_data():
     """ Obtiene el histórico de fase ya sea simulado o real"""
     # Cálculo de parámetros
-    It, Rt = sp.get_scalar_data3() # Magnitud y coordenadas del target respectivamente
+    It, Rt = sp.get_matrix_data1() # Magnitud y coordenadas del target respectivamente
     dp=Ls/(Np-1) # Paso del riel(m)
     df=BW/(Nf-1) # Paso en frecuencia del BW
     fi=fc-BW/2 # Frecuencia inferior(GHz)
@@ -70,8 +70,9 @@ def get_SAR_data():
     #Ski = np.load("RawData_prueba1.npy")
 
     #-----------------GRÁFICA DEL HISTÓRICO DE FASE-----------------------
-    dF.plotImage(Ski, x_min=fi, x_max=fs, y_min=-Ls/2, y_max=Ls/2,xlabel_name='Frecuencia(GHz)',
-                 ylabel_name='Posición del riel(m)', title_name='Histórico de fase',unit_bar='', origin_n='upper')
+    if show:
+        dF.plotImage(Ski, x_min=fi, x_max=fs, y_min=-Ls/2, y_max=Ls/2,xlabel_name='Frecuencia(GHz)',
+                    ylabel_name='Posición del riel(m)', title_name='Histórico de fase',unit_bar='', origin_n='upper')
 
     return {'Ski':Ski, 'df':df, 'fi':fi, 'rr_r':rr_r}
 
@@ -164,7 +165,7 @@ def plot_image(data2):
     data2['dy'] = dy
     data2['Lx'] = Lx
     data2['Ly'] = Ly
-    np.save('../image_data/FDBP_1_data.npy', data2)
+    np.save('../image_data/FDBP_9_data.npy', data2)
 
     # a) Definicion y lectura de parametros
     Im = data2['Im']
