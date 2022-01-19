@@ -22,7 +22,7 @@ import SARdata as Sd # Modulo creado para obtner el Historico de Fase teorico(Da
 import timeit
 
 #-----------------------LECTURA DE PARÁMETROS-----------------------------
-prm = sp.get_parameters_sim4()
+prm = sp.get_parameters_sim()
 c,fc,BW,Nf = prm['c'],prm['fc'],prm['BW'],prm['Nf']
 Ls,Np,Ro,theta = prm['Ls'],prm['Np'],prm['Ro'],prm['theta']
 Lx,Ly,dx,dy = prm['w'],prm['h'],prm['dw'],prm['dh'] # Dimensiones de la imagen
@@ -33,7 +33,7 @@ show = False
 def get_SAR_data():
     """ Obtiene el histórico de fase ya sea simulado o real"""
     # Cálculo de parámetros
-    It, Rt = sp.get_scalar_data4() # Coordenadas(m) y magnitud del target respectivamente
+    It, Rt = sp.get_matrix_data1() # Coordenadas(m) y magnitud del target respectivamente
     dp=Ls/(Np-1) # Paso del riel(m)
     fi=fc-BW/2 # Frecuencia inferior(GHz)
     fs=fc+BW/2 # Frecuencia superior(GHz)

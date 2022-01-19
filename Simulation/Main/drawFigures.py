@@ -348,6 +348,7 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
     -------
     A message confirmation.
     """
+    
     r_data = abs(data)
     if log: r_data = 20*np.log10(r_data)
     #if orientation == "H": nr,nc = 1,2 # Number of figure rows and columns
@@ -360,7 +361,8 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
     
     # Magnitude
     im1=ax[0].imshow(r_data,cmap=cmap,origin=origin_n,extent=[x_min, x_max, y_min, y_max], aspect='auto',vmin=vmin,vmax=vmax)
-    ax[0].set(xlabel=xlabel_name, ylabel=ylabel_name, title="(Magnitud)") # Origin 'upper': esquina superior izquierda; 'lower': esquina inferior izquierda
+    #x_min = -10; x_max = 10
+    ax[0].set(xlabel=xlabel_name, ylabel=ylabel_name, title="(Magnitud)", xlim=[x_min, x_max]) # Origin 'upper': esquina superior izquierda; 'lower': esquina inferior izquierda
     divider1 = make_axes_locatable(ax[0])
     cax1 = divider1.append_axes("right", size="5%", pad=0.1) # pad es el espaciado con la grafica principal
     sfmt=ticker.ScalarFormatter(useMathText=True)
@@ -385,7 +387,7 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
         #fig.tight_layout() # cuadra bien las imagenes
         if title_name != None:
             fig.savefig("/home/diegopalma/Documents/github/roj_sar/GBSAR_Angle_Imaging_Algorithms/Simulation/figures/"+"RD1_2)"
-                   +title_name+"_9",orientation='landscape')
+                   +title_name+"_11",orientation='landscape')
     elif orientation == "V":
         #fig.subplots_adjust(left=0.065, right=0.95, hspace=0.1)
         fig.tight_layout() # cuadra bien las imagenes

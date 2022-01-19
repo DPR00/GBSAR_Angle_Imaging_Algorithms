@@ -90,25 +90,30 @@ def FDBP_Algorithm(data1):
         dF.rangeProfile(fi,BW,Ski[int(len(Ski)/2)],name_title='Perfil de rango\n(Magnitud)')
 
     # Hamming Windows
-    S1 = Ski*np.hamming(len(Ski[0])) # Multiply rows x hamming windows
-    
-    S1 = (S1.T*np.hamming(len(S1))).T # Multiply columns x hamming windows
-    print(S1.shape)
+    #S1 = Ski*np.hamming(len(Ski[0])) # Multiply rows x hamming windows
+    #S1 = (S1.T*np.hamming(len(S1))).T # Multiply columns x hamming windows
+
+    # Blackman Windows
+    S1 = Ski*np.blackman(len(Ski[0])) # Multiply rows x hamming windows
+    S1 = (S1.T*np.blackman(len(S1))).T # Multiply columns x hamming windows    
+    #print(S1.shape)
     #----------PRIMERA ETAPA: 1D-IFFT respecto al eje de la 'f'-----------
     #---------------------------------------------------------------------
-    # a) Agregar un factor de fase debido al delay de los cables
+    # a) Agregar un factor de fase debido al delay de los cables. Ro = 0, entonces no tiene efecto en este caso.
     S2 = S1*np.vander([np.exp(-1j*4*np.pi/c*Ro*df)]*Np,Nf,increasing=True) # Vandermonde matrix
     
     # b) Efectuar un zero padding en el eje de la 'f'
     zpad = 3*int(rr_r*(Nf-1)/dy)+1 # Dimension final despues del zero padding (depende del espaciado de la grilla, para tener mejor interpolacion), se le agrego el 3 de mas para una grilla igual a la resolucion y para identificar correctamente los targets
     col = int(zpad - len(S1[0])) # Length of zeros
     print(zpad)
-    if col>0:
+    if col>=0:
+        print(col)
         S3 = np.pad(S2, [[0, 0], [0, col]], 'constant', constant_values=0) # Aplica zero padding a ambos extremos de la matriz
     else:
         S3 = S2[:,:zpad]
-    # c) Efectuar la IFFT
-    S4 = np.fft.ifft(S3,axis=1)
+
+    # c) Compresión en Rango: Efectuar la IFFT
+    S4 = np.fft.ifft(S3,axis=1) # A lo largo de la dimensión de frecuencia
 
     # GRAFICA
     if show:
@@ -121,11 +126,11 @@ def FDBP_Algorithm(data1):
         ax.set(xlabel='Rango(m)',ylabel='Intensidad(dB)', title='Perfil de rango')
         ax.grid()
         plt.show()
-
+    print(c)
     #------------------SEGUNDA ETAPA: Interpolacion-----------------------
     # --------------------------------------------------------------------
     # a) Definicion del dominio de interpolacion
-    dkn = 4*np.pi*df/0.3
+    dkn = 4*np.pi*df/c
     rn = (np.arange(zpad))*2*np.pi/dkn/(zpad-1)
 
     # b) Declaracion de las coordenadas de la imagen a reconstruir
@@ -135,6 +140,8 @@ def FDBP_Algorithm(data1):
 
     # Funcion para calcular la distancia entre una posición del riel y todos las coordenadas de la imagen
     def distance_nk(r_n,x_k): # vector de coordenadas de la imagen, punto del riel "k"
+        #alpha = 30
+        #x_k = x_k*np.cos(np.pi/2- alpha*np.pi/180)
         d=((r_n[:,0]-x_k)**2+(r_n[:,1])**2)**0.5
         return d
 
@@ -145,6 +152,10 @@ def FDBP_Algorithm(data1):
         return fr(dist) +1j*fi(dist)
 
     # c) Interpolacion y suma coherente
+    # --- Recordemos:
+    # --- In = sum_k(R_(n,k)^2 * F_n^(k)) / (N_f*N_p) --> Normalizacion
+    # --- Fn = S5 = sum_i(S_(k,i)* Ke), donde Ke = e^(j*4*pi*f_i*(R_(n,k)-R_o)/c)) ---> Suma coherente
+ 
     S5=np.zeros(len(r_c),dtype=complex)
     for kr in range(Np):
         Rnk = distance_nk(r_c,Lista_pos[kr]) # Vector de distancias entre una posicion del riel y todos los puntos de la imagen
@@ -165,7 +176,7 @@ def plot_image(data2):
     data2['dy'] = dy
     data2['Lx'] = Lx
     data2['Ly'] = Ly
-    np.save('../image_data/FDBP_9_data.npy', data2)
+    np.save('../image_data/FDBP_11_data.npy', data2)
 
     # a) Definicion y lectura de parametros
     Im = data2['Im']
