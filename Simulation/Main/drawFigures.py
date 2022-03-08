@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.colors as colors
+from copy import copy
 
 # UNA SOLA GRAFICA DENTRO DE UNA SOLA VENTANA(Simple unit plot)
 def simple_Uplot(x,y,title=None,Xaxis_name=None,Yaxis_name=None,axisLim=None):
@@ -257,8 +259,11 @@ def rangeProfile(fi,BW,dataf,name_title='Range Profile',file=None): # frecuencia
     # R2 = R[270:2430]
     # F2 = F1[270:2430]
     # Plot
+    F1 = 20*np.log10(F1)
+    data = {'F1':F1, 'R':R}
+    np.save('../image_data/last/prueba_sf.npy', data)
     fig, ax= plt.subplots()
-    ax.plot(R,F1,'k')
+    ax.plot(R,F1,'g')
     ax.set(xlabel='Rango(m)',ylabel='Intensidad', title=name_title)
     ax.set_xlim([R.min(),R.max()])
     ax.set_ylim([F1.min(),F1.max()])
@@ -329,7 +334,7 @@ def crangeProfile(da,datap): # resolucion en azimuth, datos en el dominio del ra
     return "ok"
 
 # Grafica de una imagen en Magnitud y Fase
-def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=None, ylabel_name=None, title_name=None, unit_bar='', origin_n='lower', log=False, vmin=None,vmax=None,cmap="hot",orientation = "H",ticks=None):
+def plotImage(data, t_sq, t_vis,x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=None, ylabel_name=None, title_name=None, unit_bar='', origin_n='lower', log=False, vmin=None,vmax=None,cmap="hot",orientation = "H",ticks=None):
     """
     Parameters
     ----------
@@ -358,11 +363,26 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
         fig, ax = plt.subplots(1,2,figsize=(12,6))#,sharex=True)
     elif orientation == "V":
         fig, ax = plt.subplots(2,1,figsize=(4,9))
-    
+
+    xgrid = np.tile(np.linspace(x_min,x_max, data.shape[1]),(data.shape[0],1))
+    ygrid = np.tile(np.linspace(y_min,y_max, data.shape[0]),(data.shape[1],1)).T
     # Magnitude
-    im1=ax[0].imshow(r_data,cmap=cmap,origin=origin_n,extent=[x_min, x_max, y_min, y_max], aspect='auto',vmin=vmin,vmax=vmax)
+    r= np.linspace(y_min,y_max,100); sq = np.pi*(90+t_sq)/180; s_max = np.pi*(90+t_sq+t_vis)/180; s_min = np.pi*(90+t_sq-t_vis)/180
+    th_lm = np.arctan2(ygrid,xgrid)
+    fc = th_lm > s_min; sc = th_lm < s_max; tc = (xgrid**2+ygrid**2)**0.5 < y_max
+    r_data = r_data*(fc*sc*tc)
+    cmap = copy(plt.get_cmap('plasma')) # plasma, cubehelix, CMRmap
+    cmap.set_over('white', 0)
+
+    im1=ax[0].imshow(r_data,cmap=cmap,origin=origin_n,extent=[x_min, x_max, y_min, y_max], aspect='equal',vmin=vmin,vmax=vmax)
+    # Linea de vision
+    x_vis = r*np.cos(sq); y_vis = r*np.sin(sq)
+    ax[0].plot(x_vis[x_vis < x_max], y_vis[x_vis < x_max], 'r-.', linewidth= 4)
+    #ax[0].plot(r*np.cos(sq),r*np.sin(sq), 'r-.', linewidth= 4)
+    #ax[0].plot(r*np.cos(s_max),r*np.sin(s_max), 'g--', linewidth= 4)
+    #ax[0].plot(r*np.cos(s_min),r*np.sin(s_min), 'g--', linewidth= 4)
     #x_min = -10; x_max = 10
-    ax[0].set(xlabel=xlabel_name, ylabel=ylabel_name, title="(Magnitud)", xlim=[x_min, x_max]) # Origin 'upper': esquina superior izquierda; 'lower': esquina inferior izquierda
+    ax[0].set(xlabel=xlabel_name, ylabel=ylabel_name, title="(Magnitud)", xlim=[x_min, x_max])#, ylim=[170, 210]) # Origin 'upper': esquina superior izquierda; 'lower': esquina inferior izquierda
     divider1 = make_axes_locatable(ax[0])
     cax1 = divider1.append_axes("right", size="5%", pad=0.1) # pad es el espaciado con la grafica principal
     sfmt=ticker.ScalarFormatter(useMathText=True)
@@ -371,14 +391,21 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
     m.ax.yaxis.set_offset_position('left')
     m.update_ticks()
     ax[0].grid(ls='--')
-
+    np.save('../image_data/last/verificar_pc_mag'+str(t_sq)+'.npy', r_data)
     # Phase
-    im2=ax[1].imshow(np.angle(data), cmap, origin=origin_n, extent=[x_min, x_max, y_min, y_max], aspect='auto')#vmin=-600,vmax=-100)
+    ang_data = np.angle(data)*(fc*sc*tc)
+    ang_data[ang_data==0] = 20
+    #ang_data[ang_data>=-2] = 20
+    cmap2 = copy(plt.get_cmap('plasma')) # plasma, cubehelix, CMRmap
+    cmap2.set_over('white')    
+    im2=ax[1].imshow(ang_data, cmap2, origin=origin_n, extent=[x_min, x_max, y_min, y_max], aspect='auto',vmin=-np.pi,vmax=np.pi)#vmin=-600,vmax=-100)
+    x_vis = r*np.cos(sq); y_vis = r*np.sin(sq)
+    ax[1].plot(x_vis[(x_vis < x_max) & (x_vis > x_min)], y_vis[(x_vis < x_max) & (x_vis > x_min)], 'r-.', linewidth= 4)
     ax[1].set(xlabel=xlabel_name,ylabel=ylabel_name, title="(Fase)")
     divider2 = make_axes_locatable(ax[1])
     cax2 = divider2.append_axes("right", size="5%", pad=0.1) # pad es el espaciado con la grafica principal
     ax[1].grid(ls='--')
-    
+    np.save('../image_data/last/verificar_pc_fase'+str(t_sq)+'.npy', ang_data)   
 
     plt.colorbar(im2,cax=cax2,label='(rad)',extend='both')
     fig.suptitle(title_name)
@@ -386,8 +413,7 @@ def plotImage(data, x_min=None, x_max=None, y_min=None, y_max=None, xlabel_name=
         fig.subplots_adjust(left=0.065, right=0.95, wspace=0.3)
         #fig.tight_layout() # cuadra bien las imagenes
         if title_name != None:
-            fig.savefig("/home/diegopalma/Documents/github/roj_sar/GBSAR_Angle_Imaging_Algorithms/Simulation/figures/"+"RD1_2)"
-                   +title_name+"_11",orientation='landscape')
+            fig.savefig("/home/diegopalma/Documents/github/roj_sar/GBSAR_Angle_Imaging_Algorithms/Simulation/figures/last_fig/"+"verificar_ag_th50_"+str(t_sq),orientation='landscape')
     elif orientation == "V":
         #fig.subplots_adjust(left=0.065, right=0.95, hspace=0.1)
         fig.tight_layout() # cuadra bien las imagenes

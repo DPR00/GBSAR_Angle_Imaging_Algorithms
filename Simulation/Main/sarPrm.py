@@ -41,8 +41,8 @@ def get_parameters():
     #Nf=2**10
 
     # Hallando el Nf en funcion a la distancia máxima deseada
-    r_r=c/(2*BW) # resolucion en rango
-    Nf=int(h/r_r) +1 #Numero de frecuencias
+    r_r = c/(2*BW) # resolucion en rango
+    Nf = int(h/r_r) +1 #Numero de frecuencias
 
     prm={
         'c':c,
@@ -207,30 +207,30 @@ def get_parameters_sim4():
     c = 0.3 #0.299792458 # Velocidad de la luz (x 1e9 m/s)
     fc = 15 # Frecuencia Central(GHz)
     BW = 0.6 # Ancho de banda(GHz)
-    Ls = 0.3 # 4 # 0.6 # Longitud del riel (m)
+    Ls = 1.2 # 4 # 0.6 # Longitud del riel (m)
     Ro = 0 # Constante debido al delay de los cables(m)
-    theta = 63.435 # Angulo azimuth de vision de la imagen final(grados sexagesimales E [0-90])
-
+    theta = 50 # Angulo azimuth de vision de la imagen final(grados sexagesimales E [0-90])
+    t_sq = -10
     # Definicion de las dimensiones de la imagen ("dh" y "dw" usados solo en BP)
-    w = 8 # 800 # 5 # Ancho de la imagen(m)
-    h = 8 #10 # 800 # 5 # Altura de la imagen(m)
-    dw = 1.25*0.01 # 0.625 # 1.25 #0.25 # 0.2 #0.1 # Paso en el eje del ancho(m)
-    dh = 1.25*0.01 # 0.625 # 1.25 #0.25 # 0.2 #0.1 # Paso en el eje de la altura(m)
+    w = 10 # 800 # 5 # Ancho de la imagen(m)
+    h = 10 #10 # 800 # 5 # Altura de la imagen(m)
+    dw = 1.25*0.01 #1.25*0.01 # 0.625 # 1.25 #0.25 # 0.2 #0.1 # Paso en el eje del ancho(m)
+    dh = 1.25*0.01 #1.25*0.01 # 0.625 # 1.25 #0.25 # 0.2 #0.1 # Paso en el eje de la altura(m)
 
     # Hallando el Np a partir de los pasos
-    dp= c/(4.21*fc*np.sin(theta*np.pi/180)) # paso del riel para un angulo de vision de 180°
+    dp= c/(4.1*fc*np.sin(theta*np.pi/180)) # paso del riel para un angulo de vision de 180°
     Np= int(Ls/dp)+1 # Numero de pasos del riel
 
     if Np%2!=0:
         Np+=1   # Para que el numero de pasos sea par
-
+    print(Np)
     #dp = 0.6
     #Np=int(Ls/dp)+1
-    #Nf=2**10
+    #Nf=2**10       
 
     # Hallando el Nf en funcion a la distancia máxima deseada
     r_r=c/(2*BW) # resolucion en rango
-    Nf=int(h/r_r) +1 #Numero de frecuencias
+    Nf= int(h/r_r) +1 #Numero de frecuencias
 
     prm={
         'c':c,
@@ -239,6 +239,7 @@ def get_parameters_sim4():
         'Ls':Ls,
         'Ro':Ro,
         'theta':theta,
+        't_sq': t_sq,
         'Np':Np,
         'Nf':Nf,
         'w':w,
@@ -271,8 +272,8 @@ def get_parameters2(dset):
     w = 700 # Ancho de la imagen(m)
     h = 850 # Altura de la imagen(m)
     hi = 100 # Posicion inicial en el eje del rango
-    dw = 0.5 # Paso en el eje del ancho(m)
-    dh = 0.5 # Paso en el eje de la altura(m)
+    dw = 0.1 # Paso en el eje del ancho(m)
+    dh = 0.1 # Paso en el eje de la altura(m)
 
     prm={
         'c':c,
@@ -296,39 +297,66 @@ def get_parameters2(dset):
 # Un solo target
 def get_scalar_data():
     at=np.array([1]) # Reflectividad
-    Rt=np.array([(0,5)]) # Coordenadas del target (x,y)m
+    Rt=np.array([(3, 5)]) # Coordenadas del target (x,y)m
     return at,Rt
 
 def get_scalar_datax():
     at=np.array([1, 1, 1]) # Reflectividad
-    Rt=np.array([(0,2), (0,5), (0,8)]) # Coordenadas del target (x,y)m
+    Rt=np.array([(-3,3), (0,4), (3,5)]) # Coordenadas del target (x,y)m
     return at,Rt
 
 # Varios targets
 def get_scalar_data2():
     at=np.array([1,1,1]) # Reflectividad
-    Rt=np.array([(0,2),(4,8),(-4,8)]) # Coordenadas del target (x,y)m
+    Rt=np.array([(-2,4),(0,4),(2,4)]) # Coordenadas del target (x,y)m
     return at,Rt
 
 def get_scalar_data3():
     at=np.array([1,1,1]) # Reflectividad
-    Rt=np.array([(-2,2),(0,4),(2,6)]) # Coordenadas del target (x,y)m
+    Rt=np.array([(-15,195),(0,195),(20,195)]) # Coordenadas del target (x,y)m
     return at,Rt
 
 def get_scalar_data4():
     at=np.array([1,1,1]) # Reflectividad
-    Rt=np.array([(-2,6),(0,4),(2,6)]) # Coordenadas del target (x,y)m
+    Rt=np.array([(-3,3),(0,4),(3,5)]) # Coordenadas del target (x,y)m
     return at,Rt
 
 def get_scalar_data5():
     at=np.array([1,1,1,1,1]) # Reflectividad
-    Rt=np.array([(-8,3),(-2,4),(0,5),(2,6),(7,4)]) # Coordenadas del target (x,y)m
+    Rt=np.array([(-4,3),(-2,4),(0,6),(2,3),(4,2)]) # Coordenadas del target (x,y)m
     return at,Rt
+
+def get_scalar_data6():
+    at=np.array([1,1,1,1,1]) # Reflectividad
+    Rt=np.array([(-20,200),(-10,180),(0,190),(10,180),(20,200)]) # Coordenadas del target (x,y)m
+    return at,Rt
+
+def get_matrix_data():
+    # Se define una imagen con la letra T
+
+    ro_x, ro_y = 2, 4 #-2.5, 2 # Posicion inicial (x,y)m
+    d_x, d_y = 0.25,0.25#0.125,0.125 #0.25, 0.25 # Paso en los ejes (x,y)m
+    N_r, N_c = 9, 9#41,41 #21, 21 # Numero de filas y columnas de la matriz de targets
+    Data = np.array([[0]*3+[1]*3+[0]*3]*6+[[1]*N_c]*3)#np.array([[0]*13+[1]*15+[0]*13]*28+[[1]*N_c]*13) #np.array([[0]*4+[1]*3+[0]*4]*7+[[1]*N_c]*4)
+    I_t = Data.reshape(1,N_r*N_c)[0] # Vector de intensidades
+
+    rt_x=ro_x+d_x*np.arange(N_c) # Coordenada x de los targets(empezando en ro_x)
+    rt_y=ro_y+d_y*np.arange(N_r) # Coordenada y de los targets(empezando en ro_y)
+    rt=np.array([(x,y) for y in rt_y for x in rt_x]) #  Vector de coordenadas (x,y)
+
+    # Grafica de la imagen a simular
+    if show:
+        fig, ax = plt.subplots()
+        ax.imshow(Data,aspect='auto',origin='lower',extent=[rt_x.min(), rt_x.max(), rt_y.min(),rt_y.max()])
+        ax.set(xlabel='Eje x(m)',ylabel='Eje y(m)', title='Imagen para la simulación')
+
+    return I_t, rt
+
 
 def get_matrix_data1():
     # Se define una imagen con la letra T
 
-    ro_x, ro_y = -2.5, 2 # Posicion inicial (x,y)m
+    ro_x, ro_y = -2, 45 #-2.5, 2 # Posicion inicial (x,y)m
     d_x, d_y = 0.25,0.25#0.125,0.125 #0.25, 0.25 # Paso en los ejes (x,y)m
     N_r, N_c = 21,21#41,41 #21, 21 # Numero de filas y columnas de la matriz de targets
     Data = np.array([[0]*7+[1]*7+[0]*7]*14+[[1]*N_c]*7)#np.array([[0]*13+[1]*15+[0]*13]*28+[[1]*N_c]*13) #np.array([[0]*4+[1]*3+[0]*4]*7+[[1]*N_c]*4)
@@ -480,9 +508,9 @@ def get_matrix_data6():
     # Formando las letras x separado
     # Letra I
     letraI = np.array([[1]*11]*3+[[0]*4+[1]*3+[0]*4]*10+[[1]*11]*3)
-    # Letra U
+    # Letra G
     letraG = np.array([[1]*11]*3+[[1]*3+[0]*5+[1]*3]*3+[[1]*3+[0]*2+[1]*6]*3+[[1]*3+[0]*8]*4+[[1]*11]*3)
-    # Letra N
+    # Letra P
     letraP = np.array([[[1]*3+[0]*8]*8 + [[1]*11]*2 + [[1]*3+[0]*5+[1]*3]*4 + [[1]*11]*2])
 
     # Joining all the letters

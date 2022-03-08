@@ -10,8 +10,9 @@ import sarPrm as sp
 import drawFigures as dF
 
 #------------------LECTURA Y DEFINICIÓN DE PARÁMETROS--------------------
-prm = sp.get_parameters_sim()
+prm = sp.get_parameters_sim4()
 c,fc,BW,Nf = prm['c'],prm['fc'],prm['BW'],prm['Nf']
+t_sq = prm['t_sq']
 Ls,Np,Ro,theta = prm['Ls'],prm['Np'],prm['Ro'],prm['theta']
 Lx,Ly,dx,dy = prm['w'],prm['h'],prm['dw'],prm['dh'] # Dimensiones de la imagen
 
@@ -86,9 +87,37 @@ def get_phaseH(prm, I_t, rt): # Parámetros, Vector de intensidades, vector de p
 
     return Sr_f
 
+def get_phaseH_sim(prm, I_t, rt): # Parámetros, Vector de intensidades, vector de posiciones
+    # Data
+    c,fc,BW,Nf,Ls,Np = prm['c'],prm['fc'],prm['BW'],prm['Nf'],prm['Ls'],prm['Np']
+    t_sq = prm['t_sq']
+    fi=fc-BW/2 # Frecuencia inferior(GHz)
+    fs=fc+BW/2 # Frecuencia superior(GHz)
+
+    Lista_f = np.linspace(fi, fs, Nf) #  Vector de frecuencias(GHz)
+    Lista_pos = np.linspace(-Ls/2, Ls/2, Np) # Vector de posiciones del riel(m)
+
+    """It2 = np.tile(I_t,[len(Lista_pos),len(Lista_f),1])
+    rt2 = rt[:,0]+rt[:,1]*1j
+    ff,pp,tt=np.meshgrid(Lista_f,Lista_pos,rt2)
+    d = abs(pp-tt)
+    k=2*np.pi*ff/c
+    Sr_f2=It2*np.exp(-2j*k*d)
+    Sr_f2=np.sum(Sr_f2,axis=2)"""
+
+    #-------------------SCATTERED SIGNAL---------------------#
+
+    Sr_f = np.array([sum(I_t[i]*np.exp(-1j*4*np.pi*fi*distance_nk(rt[i],xi)/c) for i in range(len(I_t))) for xi in Lista_pos for fi in Lista_f]) # Create a vector with value for each fi y ri
+    Sr_f = np.reshape(Sr_f,(Np,Nf)) # Reshape the last vector Sr_f
+    Sr_f = np.fliplr(np.triu( np.fliplr(np.triu(Sr_f, -1)), -1))
+    return Sr_f
+
 # Distance vector between target and riel_k position in matrix target
 def distance_nk(r_n, x_k): # punto "n", punto del riel "k"
-    #alpha = 30
-    #x_k = x_k*np.cos(np.pi/2- alpha*np.pi/180)
-    d=((r_n[0]-x_k)**2+(r_n[1])**2)**0.5
+    alpha = t_sq*np.pi/180
+    R = np.array([[np.cos(alpha), np.sin(alpha)],[-np.sin(alpha), np.cos(alpha)]])
+    mult = R.dot(np.array([[r_n[0]],[r_n[1]]]))
+    r_x, r_y = mult[0], mult[1]
+    d=((r_x-x_k*np.cos(alpha))**2+(r_y)**2)**0.5
     return d
+

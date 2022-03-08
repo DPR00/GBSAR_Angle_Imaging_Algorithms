@@ -25,16 +25,39 @@ import timeit
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 #------------------LECTURA Y DEFINICIÓN DE PARÁMETROS--------------------
-prm = sp.get_parameters()
+prm = sp.get_parameters_sim4()
 c,fc,BW,Nf = prm['c'],prm['fc'],prm['BW'],prm['Nf']
+t_sq = prm['t_sq']
 Ls,Np,Ro,theta = prm['Ls'],prm['Np'],prm['Ro'],prm['theta']
 Lx,Ly,dx,dy = prm['w'],prm['h'],prm['dw'],prm['dh'] # Dimensiones de la imagen
 show = False
+vmin = -100 #dB
+vmax = -20
+R_max=Nf*c/(2*BW)
+
+def get_valid_data(It, Rt, t_sq, t_vis):
+
+    lim_max = 90+t_sq+t_vis
+    lim_min = 90+t_sq-t_vis
+
+    for i in range(len(Rt)):
+        th = np.arctan2(Rt[i,1],Rt[i,0])*180/np.pi
+        if not(lim_min< th and th < lim_max):
+            It[i] = 0
+    if not np.sum(It!=0):
+        It[:]= 0
+
+    print(It)
+    return It, Rt
 
 def get_SAR_data():
     """ Obtiene el histórico de fase ya sea simulado o real"""
     # Cálculo de parámetros
-    It, Rt = sp.get_matrix_data1() # Magnitud y coordenadas del target respectivamente
+    It, Rt = sp.get_scalar_data() # Magnitud y coordenadas del target respectivamente
+    #print(It)
+    It, Rt = get_valid_data(It, Rt, t_sq, theta)
+    #print("....")
+    #print(It)
     dp=Ls/(Np-1) # Paso del riel(m)
     df=BW/(Nf-1) # Paso en frecuencia del BW
     fi=fc-BW/2 # Frecuencia inferior(GHz)
@@ -71,7 +94,7 @@ def get_SAR_data():
 
     #-----------------GRÁFICA DEL HISTÓRICO DE FASE-----------------------
     if show:
-        dF.plotImage(Ski, x_min=fi, x_max=fs, y_min=-Ls/2, y_max=Ls/2,xlabel_name='Frecuencia(GHz)',
+        dF.plotImage(Ski, t_sq, theta, x_min=fi, x_max=fs, y_min=-Ls/2, y_max=Ls/2,xlabel_name='Frecuencia(GHz)',
                     ylabel_name='Posición del riel(m)', title_name='Histórico de fase',unit_bar='', origin_n='upper')
 
     return {'Ski':Ski, 'df':df, 'fi':fi, 'rr_r':rr_r}
@@ -85,17 +108,34 @@ def FDBP_Algorithm(data1):
     rr_r = data1['rr_r']
     Lista_pos = np.linspace(-Ls/2, Ls/2, Np)
 
-    # Grafica el perfil de rango para una posicion del riel(Posicion intermedia)
+    #Grafica el perfil de rango para una posicion del riel(Posicion intermedia)
     if show:
         dF.rangeProfile(fi,BW,Ski[int(len(Ski)/2)],name_title='Perfil de rango\n(Magnitud)')
 
+    # Sin filro
+    #S1 = Ski
+    
     # Hamming Windows
     #S1 = Ski*np.hamming(len(Ski[0])) # Multiply rows x hamming windows
     #S1 = (S1.T*np.hamming(len(S1))).T # Multiply columns x hamming windows
 
+    # Hanning Windows
+    #S1 = Ski*np.hanning(len(Ski[0])) # Multiply rows x hamming windows
+    #S1 = (S1.T*np.hanning(len(S1))).T # Multiply columns x hamming windows
+
+    # Bartlett Windows
+    #S1 = Ski*np.bartlett(len(Ski[0])) # Multiply rows x hamming windows
+    #S1 = (S1.T*np.bartlett(len(S1))).T # Multiply columns x hamming windows
+
+    # Kaiser Windows
+    #S1 = Ski*np.kaiser(len(Ski[0]),14) # Multiply rows x hamming windows
+    #S1 = (S1.T*np.kaiser(len(S1), 14)).T # Multiply columns x hamming windows 
+
     # Blackman Windows
     S1 = Ski*np.blackman(len(Ski[0])) # Multiply rows x hamming windows
     S1 = (S1.T*np.blackman(len(S1))).T # Multiply columns x hamming windows    
+    #dF.rangeProfile(fi,BW,S1[int(len(S1)/2)],name_title='Perfil de rango\n(Magnitud)')
+
     #print(S1.shape)
     #----------PRIMERA ETAPA: 1D-IFFT respecto al eje de la 'f'-----------
     #---------------------------------------------------------------------
@@ -135,14 +175,16 @@ def FDBP_Algorithm(data1):
 
     # b) Declaracion de las coordenadas de la imagen a reconstruir
     x_c=np.arange(-Lx/2,Lx/2+dx,dx)
-    y_c=np.arange(0,Ly+dy,dy)
+    y_c=np.arange(0,0+Ly+dy,dy)
     r_c=np.array([(i,j) for j in y_c for i in x_c])
 
     # Funcion para calcular la distancia entre una posición del riel y todos las coordenadas de la imagen
     def distance_nk(r_n,x_k): # vector de coordenadas de la imagen, punto del riel "k"
-        #alpha = 30
-        #x_k = x_k*np.cos(np.pi/2- alpha*np.pi/180)
-        d=((r_n[:,0]-x_k)**2+(r_n[:,1])**2)**0.5
+        alpha = t_sq*np.pi/180
+        R = np.array([[np.cos(alpha), np.sin(alpha)],[-np.sin(alpha), np.cos(alpha)]])
+        r_n = R.dot(r_n.T)
+        r_n = r_n.T
+        d=((r_n[:,0]-x_k*np.cos(alpha))**2+(r_n[:,1])**2)**0.5
         return d
 
     # Funcion de interpolacion
@@ -161,12 +203,21 @@ def FDBP_Algorithm(data1):
         Rnk = distance_nk(r_c,Lista_pos[kr]) # Vector de distancias entre una posicion del riel y todos los puntos de la imagen
         Ke = np.exp(1j*4*np.pi/c*fi*(Rnk-Ro)) # Factor de fase
         Fnk = interp(kr,Rnk) # Valor interpolado en cada punto "n" de la grilla
+        if False:#(kr == 0 or kr == Np/2 or kr == Np-1):
+            temp = np.reshape(Fnk*Ke/(Nf*Np),(len(y_c),len(x_c)))
+            dF.plotImage(temp/(np.sqrt(np.sum(abs(temp)**2))),t_sq, theta,cmap="plasma",xlabel_name='Azimut(m)',ylabel_name='Rango(m)', title_name='Resultado Algoritmo Back Projection',
+                        x_min=-(Lx+dx)/2, x_max=(Lx+dx)/2, y_min=0-dy/2, y_max=Ly+dy/2,unit_bar='(dB)',log=True,vmin=vmin,
+                        vmax=vmax)
+            plt.show()
         S5 += Fnk*Ke # Valor final en cada punto de la grilla
     S6 = S5/(Nf*Np)
     S7 = np.reshape(S6,(len(y_c),len(x_c)))
-
     # d) Normalizando la salida
-    Im = S7/(np.sqrt(np.sum(abs(S7)**2)))
+    if(np.sum(abs(S7)**2) != 0):
+        Im = S7/(np.sqrt(np.sum(abs(S7)**2)))
+    else:
+        Im = (10e-5+10e-6j)*np.ones((S7.shape[0],S7.shape[1]))
+
 
     return {'Im':Im}
 
@@ -176,7 +227,7 @@ def plot_image(data2):
     data2['dy'] = dy
     data2['Lx'] = Lx
     data2['Ly'] = Ly
-    np.save('../image_data/FDBP_11_data.npy', data2)
+    #np.save('../image_data/last/prueba_sinfiltro.npy', data2)
 
     # a) Definicion y lectura de parametros
     Im = data2['Im']
@@ -185,9 +236,9 @@ def plot_image(data2):
     cmap="plasma"
     vmin = -100 #dB
     vmax = -20
-    dF.plotImage(Im,cmap=cmap,xlabel_name='Azimut(m)',ylabel_name='Rango(m)', title_name='Resultado Algoritmo Back Projection',
+    dF.plotImage(Im,t_sq,theta,cmap=cmap,xlabel_name='Azimut(m)',ylabel_name='Rango(m)', title_name='Resultado Algoritmo Back Projection',
                  x_min=-(Lx+dx)/2, x_max=(Lx+dx)/2, y_min=0-dy/2, y_max=Ly+dy/2,unit_bar='(dB)',log=True,vmin=vmin,
-                 vmax=vmax)
+                 vmax=vmax) # 0 -dy/2 ; Ly+dy/2
     return Im
 
 def main():
@@ -199,8 +250,8 @@ def main():
 
     start_time = timeit.default_timer()
     d_p = FDBP_Algorithm(datos) # Implementa el algoritmo RMA
-    plot_image(d_p) # Grafica de la magnitud
     print("Tiempo del procesamiento(BP): ",timeit.default_timer() - start_time,"s")
+    plot_image(d_p) # Grafica de la magnitud
 
     return d_p['Im']
 
